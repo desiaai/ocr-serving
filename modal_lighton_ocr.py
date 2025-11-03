@@ -23,10 +23,10 @@ def preload_model() -> None:
     # Download the entire repo snapshot into the standard HF cache path
     snapshot_download(repo_id=model_id)
 
-# Build image with specific vLLM commit required for LightOnOCR
-# Per LightOnOCR docs: vLLM commit e88bdd60d9a25d985168c9f4a60ab10095236d7c
-# Use pre-built wheels from wheels.vllm.ai (nightlies) until 0.11.1 is released
-VLLM_COMMIT = "e88bdd60d9a25d985168c9f4a60ab10095236d7c"
+# Build image with vLLM v0.11.1rc5 (latest release candidate with vision support)
+# Upgrading from commit e88bdd60d9... to test if CUDA graph bugs are fixed
+# Use pre-built wheels from wheels.vllm.ai
+VLLM_COMMIT = "v0.11.1rc5"
 
 image = (
     modal.Image.from_registry("nvidia/cuda:12.8.0-devel-ubuntu22.04", add_python="3.12")
