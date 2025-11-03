@@ -43,6 +43,7 @@ image = (
     .env({
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
         "MODEL_ID": MODEL_ID,
+        "FAST_BOOT": "true" if FAST_BOOT else "false",  # Pass through to container
         "TORCH_CUDA_ARCH_LIST": "89",  # L4 GPU architecture
     })
     .run_function(
