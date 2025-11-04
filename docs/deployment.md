@@ -281,20 +281,16 @@ FAST_BOOT=true modal deploy modal_lighton_ocr.py
 
 ## Performance & Cost
 
-### Speed
+### Speed (A100-40GB)
 - **Cold start:** ~60-90 seconds (first request after idle)
-- **Warm latency:** ~175ms per page
-- **Throughput:** ~5.7 pages/sec on L4 GPU
+- **Throughput:** ~1.23 pages/sec (64 parallel requests)
+- **Average page latency:** ~38s (under heavy load)
 
-### Cost (L4 GPU)
+### Cost (A100-40GB)
 - **Idle:** $0/hour (scale-to-zero)
-- **Active:** ~$2.70/hour
-- **Typical usage (5% uptime):** ~$4/month
-- **Per 1000 pages:** <$0.10
-
-Compare to:
-- GPT-4V: $30-50 per 1000 pages
-- Azure Document Intelligence: $1.50 per 1000 pages
+- **Active:** $2.10/hour
+- **Typical usage (1 hour/day):** ~$63/month
+- **Per 1000 pages:** ~$0.47 (at 1.23 pages/sec)
 
 ### Scaling Configuration
 
@@ -302,17 +298,54 @@ Edit `modal_lighton_ocr.py`:
 
 ```python
 @app.function(
-    gpu="L4:1",              # L4, H100, A10G
+    gpu="A100-40GB:1",       # See GPU table for other options
     scaledown_window=15*60,  # Stay warm for 15 min
     timeout=10*60,           # 10 min max
 )
-@modal.concurrent(max_inputs=32)  # 32 concurrent requests per container
+@modal.concurrent(max_inputs=64)  # 64 concurrent requests per container
 ```
 
 **Autoscaling:**
 - Scale to zero after 15 minutes of inactivity
 - Spin up new containers automatically under load
-- Max 32 concurrent requests per container
+- Max 64 concurrent requests per container
+
+## Benchmarking
+
+Run throughput benchmarks to measure performance:
+
+```bash
+# Basic benchmark
+make benchmark \
+  MODAL_URL=https://yourname--lighton-ocr-vllm-serve-dev.modal.run \
+  BENCH_PDF=/path/to/test.pdf \
+  BENCH_PAGES=1-10 \
+  BENCH_PARALLEL=4
+
+# High-load benchmark (64 parallel requests)
+make benchmark \
+  MODAL_URL=https://yourname--lighton-ocr-vllm-serve-dev.modal.run \
+  BENCH_PDF=/tmp/document.pdf \
+  BENCH_PAGES=1-109 \
+  BENCH_PARALLEL=64
+```
+
+**Example output (A100-40GB, 109 pages, 64 parallel):**
+```
+Total pages processed:     109
+Parallel requests:         64
+Total duration:            88.95s
+Average page duration:     38.35s
+Throughput:                1.23 pages/sec
+Total tokens extracted:    61790
+Avg tokens/sec per page:   16.0
+```
+
+**Benchmark options:**
+- `BENCH_PDF`: Path to PDF file
+- `BENCH_PAGES`: Page range (e.g., "1-10" or "1,5,10")
+- `BENCH_PARALLEL`: Number of concurrent requests
+- `--metrics`: Show vLLM Prometheus metrics after benchmark
 
 ## Monitoring
 

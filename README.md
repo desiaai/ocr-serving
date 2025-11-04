@@ -1,28 +1,29 @@
 # LightOnOCR-1B Modal Deployment
 
-Fast, cost-effective OCR deployment on Modal using LightOnOCR-1B vision-language model via vLLM.
+OCR deployment on Modal using LightOnOCR-1B vision-language model via vLLM.
 
 ## Features
 
-- ⚡ **Fast:** 5.7 pages/sec on L4 GPU (~175ms per page)
-- 💰 **Cheap:** ~$4/month typical usage (scale-to-zero)
-- 🔧 **Simple:** One command deployment with Makefile
-- 🌐 **Standard API:** OpenAI-compatible endpoints
-- 📊 **Streaming:** Real-time OCR output
-- 🎯 **Optimized:** Pre-configured for LightOnOCR (1540px, 200 DPI)
+- One command deployment with Makefile
+- OpenAI-compatible API endpoints
+- Streaming support for real-time output
+- Pre-configured for LightOnOCR (1540px, 200 DPI)
+- Scale-to-zero GPU instances
 
 ## Quick Start
 
 ```bash
-cd ~/dev/junk/lighton-vlm
+# Clone repository
+git clone https://github.com/desiaai/ocr-serving.git
+cd ocr-serving
 
-# 1. Check dependencies
+# Check dependencies
 make check-modal
 
-# 2. Start dev server
-make serve
+# Start dev server
+FAST_BOOT=false make serve-uvx
 
-# 3. In another terminal, test it (copy URL from step 2 output)
+# In another terminal, test it (copy URL from serve output)
 make test MODAL_URL=https://yourname--lighton-ocr-vllm-serve-dev.modal.run
 ```
 
@@ -69,7 +70,7 @@ make serve-fast         # Fast cold starts
 
 ```
 ┌─────────────────────────────────────┐
-│  Modal Container (L4 GPU)           │
+│  Modal Container (A100-40GB)        │
 │  ┌───────────────────────────────┐  │
 │  │  vLLM Server :8000            │  │
 │  │  lightonai/LightOnOCR-1B-1025 │  │
@@ -86,17 +87,16 @@ make serve-fast         # Fast cold starts
 
 ## Cost Breakdown
 
+A100-40GB pricing: $2.10/hr
+
 | Scenario | Cost/month | Details |
 |----------|------------|---------|
 | **Idle** | $0 | Scale-to-zero enabled |
-| **Light (1 hour/day)** | $4 | ~5% uptime |
-| **Medium (4 hours/day)** | $16 | ~17% uptime |
-| **24/7** | $1,950 | Always-on (not recommended) |
+| **Light (1 hour/day)** | $63 | ~4% uptime |
+| **Medium (4 hours/day)** | $252 | ~17% uptime |
+| **24/7** | $1,512 | Always-on (not recommended) |
 
-Compare:
-- GPT-4V: $30-50 per 1k pages
-- Azure Document Intelligence: $1.50 per 1k pages
-- LightOnOCR on Modal: **$0.01 per 1k pages**
+See [docs/deployment.md](docs/deployment.md) for other GPU options and pricing.
 
 ## Model Variants
 
@@ -127,13 +127,9 @@ make serve-fast
 
 ### GPU Options
 
-Edit `modal_lighton_ocr.py`:
+See [docs/deployment.md](docs/deployment.md) for GPU configuration table with CUDA arch codes and pricing.
 
-```python
-gpu="L4:1"     # $2.70/hr (recommended)
-gpu="H100:1"   # $9.70/hr (overkill for 1B model)
-gpu="A10G:1"   # $1.10/hr (untested)
-```
+Current configuration: A100-40GB (CUDA arch 80, $2.10/hr)
 
 ## Performance Benchmarks
 
@@ -142,7 +138,7 @@ gpu="A10G:1"   # $1.10/hr (untested)
 | ArXiv papers | 81.4 | Scientific docs |
 | Old scans | 71.6 | Degraded quality |
 | Math notation | 76.4 | Equations, symbols |
-| **Tables** | **35.2** | ⚠️ Weakest category |
+| **Tables** | **35.2** | Weakest category |
 | Multi-column | 80.0 | Newspapers, magazines |
 | Tiny text | 88.7 | Small fonts |
 | Base | 99.5 | Clean documents |
@@ -150,10 +146,10 @@ gpu="A10G:1"   # $1.10/hr (untested)
 
 ## Limitations
 
-- ❌ Tables only 35.2 score (use GPT-4V for complex tables)
-- ❌ Not a general VLM (no Q&A, no reasoning)
-- ❌ Latin alphabet languages only
-- ❌ Requires 1540px preprocessing
+- Tables: 35.2 score (weakest category)
+- Not a general VLM (no Q&A, no reasoning)
+- Latin alphabet languages only
+- Requires 1540px preprocessing
 
 ## API Examples
 
