@@ -242,3 +242,15 @@ LightOnOCR: Apache 2.0
 3. **Monitor:** Set up alerts in Modal dashboard
 4. **Optimize:** Tune `scaledown_window` based on usage patterns
 5. **Scale:** Add more GPUs or use model variants
+
+## Example Output
+
+Sample PDF page and extracted text:
+
+**Input PDF Page:**
+
+![Sample PDF](media/starbucks_filing.png)
+
+**Extracted Text Output:**
+
+![Extracted Output](media/starbucks_filing_extracted.png)
