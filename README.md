@@ -53,9 +53,10 @@ make serve              # Dev mode (hot reload, temp URL)
 make deploy             # Production (stable URL)
 
 # Testing
-make test MODAL_URL=<url>                      # Test with arXiv PDF
-make test-custom MODAL_URL=<url> PDF_FILE=<path>  # Test custom PDF
-make health MODAL_URL=<url>                    # Health check
+make test MODAL_URL=<url>                           # Test with arXiv PDF
+make test-custom MODAL_URL=<url> PDF_FILE=<path>    # Test custom PDF
+make test-custom MODAL_URL=<url> PDF_FILE=<path> PAGE=6  # Test specific page
+make health MODAL_URL=<url>                         # Health check
 
 # Monitoring
 make logs               # Live logs
