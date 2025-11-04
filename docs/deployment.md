@@ -354,6 +354,53 @@ View metrics at: https://modal.com/apps
 
 ## Advanced Usage
 
+### GPU Configuration
+
+**Supported GPUs and CUDA Compute Capabilities:**
+
+| GPU Model | CUDA Arch | Memory | Cost/hr | Recommended max-num-seqs |
+|-----------|-----------|--------|---------|--------------------------|
+| T4 | 75 | 16GB | $0.59 | 256 |
+| L4 | 89 | 24GB | $0.80 | 512 |
+| A10 | 86 | 24GB | $1.10 | 512 |
+| L40S | 89 | 48GB | $1.95 | 2048 |
+| A100-40GB | 80 | 40GB | $2.10 | 1024 |
+| A100-80GB | 80 | 80GB | $2.50 | 4096 |
+| H100 | 90 | 80GB | $3.95 | 4096 |
+| H200 | 90 | 141GB | $4.54 | 8192 |
+| B200 | 100 | 192GB | $6.25 | 12288 |
+
+**To change GPU in `modal_lighton_ocr.py`:**
+
+```python
+# 1. Update CUDA arch in image build:
+.env({
+    "TORCH_CUDA_ARCH_LIST": "80",  # See CUDA Arch column above
+    # ...
+})
+
+# 2. Update GPU type:
+@app.function(
+    gpu="A100-40GB:1",  # GPU Model from table
+    # ...
+)
+
+# 3. Adjust max sequences in serve():
+cmd = [
+    # ...
+    "--max-num-seqs",
+    "1024",  # From Recommended column above
+]
+```
+
+**CUDA Arch Codes Reference:**
+- **100**: B200 (Blackwell)
+- **90**: H100, H200 (Hopper)
+- **89**: L4, L40S (Ada Lovelace)
+- **86**: A10 (Ampere)
+- **80**: A100 (Ampere)
+- **75**: T4 (Turing)
+
 ### Custom Model Variant
 
 Edit `modal_lighton_ocr.py`:

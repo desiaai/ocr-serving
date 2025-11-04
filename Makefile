@@ -39,6 +39,11 @@ help:
 	@echo "  make health          - Check server health"
 	@echo "  make models          - List available models"
 	@echo ""
+	@echo "Benchmarking:"
+	@echo "  make benchmark       - Run throughput benchmark (set MODAL_URL)"
+	@echo "  make benchmark-parallel - Test 1, 2, 4 parallel requests"
+	@echo "  make metrics         - Show vLLM Prometheus metrics"
+	@echo ""
 	@echo "Monitoring:"
 	@echo "  make logs            - View live logs"
 	@echo "  make logs-history    - View historical logs"
@@ -49,11 +54,14 @@ help:
 	@echo "  PDF_URL=$(PDF_URL)"
 	@echo "  PAGE=$(PAGE)"
 	@echo "  FAST_BOOT=$(FAST_BOOT)"
+	@echo "  BENCH_PDF=$(BENCH_PDF)"
+	@echo "  BENCH_PAGES=$(BENCH_PAGES)"
+	@echo "  BENCH_PARALLEL=$(BENCH_PARALLEL)"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make serve                                    # Start dev server"
 	@echo "  make test MODAL_URL=https://...modal.run     # Test endpoint"
-	@echo "  make test-custom PDF_FILE=~/invoice.pdf      # Test custom PDF"
+	@echo "  make benchmark MODAL_URL=... BENCH_PARALLEL=4 # Benchmark 4 parallel"
 	@echo "  FAST_BOOT=true make deploy                   # Deploy with fast boot"
 
 .PHONY: serve
@@ -86,7 +94,7 @@ test:
 	@echo "PDF: $(if $(PDF_FILE),$(PDF_FILE),$(PDF_URL))"
 	@echo "Page: $(PAGE)"
 	uv run --with pypdfium2 --with pillow --with requests \
-	  python test_modal.py \
+	  python tests/test_modal.py \
 	  --url $(MODAL_URL) \
 	  $(TEST_PDF) \
 	  --page $(PAGE) \
@@ -105,7 +113,7 @@ test-custom:
 	fi
 	@echo "Testing with custom PDF: $(PDF_FILE)"
 	uv run --with pypdfium2 --with pillow --with requests \
-	  python test_modal.py \
+	  python tests/test_modal.py \
 	  --url $(MODAL_URL) \
 	  --pdf-file $(PDF_FILE) \
 	  --page $(PAGE) \
@@ -118,7 +126,7 @@ test-no-stream:
 		exit 1; \
 	fi
 	uv run --with pypdfium2 --with pillow --with requests \
-	  python test_modal.py \
+	  python tests/test_modal.py \
 	  --url $(MODAL_URL) \
 	  $(TEST_PDF) \
 	  --page $(PAGE) \
@@ -187,6 +195,42 @@ clean:
 	@echo "Cleaning up __pycache__ and .pyc files..."
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
+
+# Benchmarking
+BENCH_PDF ?= /tmp/starbucks.pdf
+BENCH_PAGES ?= 1-3
+BENCH_PARALLEL ?= 1
+
+.PHONY: benchmark
+benchmark:
+	@if [ -z "$(MODAL_URL)" ]; then \
+		echo "Error: MODAL_URL not set"; \
+		exit 1; \
+	fi
+	@echo "Benchmarking with $(BENCH_PARALLEL) parallel requests..."
+	uv run --with pypdfium2 --with pillow --with requests --with aiohttp \
+	  python benchmarks/benchmark_modal.py \
+	  --url $(MODAL_URL) \
+	  --pdf $(BENCH_PDF) \
+	  --pages $(BENCH_PAGES) \
+	  --parallel $(BENCH_PARALLEL) \
+	  --metrics
+
+.PHONY: benchmark-parallel
+benchmark-parallel:
+	@echo "Testing parallel throughput (1, 2, 4 requests)..."
+	@$(MAKE) benchmark BENCH_PARALLEL=1
+	@$(MAKE) benchmark BENCH_PARALLEL=2
+	@$(MAKE) benchmark BENCH_PARALLEL=4
+
+.PHONY: metrics
+metrics:
+	@if [ -z "$(MODAL_URL)" ]; then \
+		echo "Error: MODAL_URL not set"; \
+		exit 1; \
+	fi
+	@echo "Fetching vLLM metrics from $(MODAL_URL)/metrics"
+	@curl -s "$(MODAL_URL)/metrics" | grep -E "vllm:(num_requests|gpu_cache|throughput)" || curl -s "$(MODAL_URL)/metrics"
 
 # Variants for different model sizes
 .PHONY: serve-32k

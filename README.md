@@ -26,17 +26,23 @@ make serve
 make test MODAL_URL=https://yourname--lighton-ocr-vllm-serve-dev.modal.run
 ```
 
-## Files
+## Project Structure
 
-| File | Purpose |
-|------|---------|
-| `modal_lighton_ocr.py` | vLLM server deployment (73 lines) |
-| `test_modal.py` | Test script for validation (152 lines) |
-| `Makefile` | Deployment automation (200+ lines) |
-| `DEPLOYMENT.md` | Complete usage guide (400+ lines) |
-| `NOTES.md` | LightOnOCR reference docs |
-| `USAGE_PATTERNS.md` | Best practices & gotchas |
-| `COMPARISON.md` | vs other OCR solutions |
+```
+lighton-vlm/
+├── modal_lighton_ocr.py       # vLLM server deployment
+├── Makefile                   # Deployment automation
+├── tests/
+│   └── test_modal.py         # Test script
+├── benchmarks/
+│   └── benchmark_modal.py    # Performance benchmarking
+└── docs/
+    ├── deployment.md         # Complete usage guide
+    ├── best-practices.md     # Usage patterns & gotchas
+    └── archive/
+        ├── model-card.md     # HuggingFace model card
+        └── notes.md          # Model reference
+```
 
 ## Common Commands
 
@@ -216,10 +222,10 @@ curl -X POST https://yourname--lighton-ocr-vllm-serve.modal.run/v1/chat/completi
 
 ## Documentation
 
-- **DEPLOYMENT.md** - Complete deployment guide with examples
-- **NOTES.md** - LightOnOCR model details and benchmarks
-- **USAGE_PATTERNS.md** - Best practices and common pitfalls
-- **COMPARISON.md** - vs Tesseract, PaddleOCR, GPT-4V, etc.
+- **[docs/deployment.md](docs/deployment.md)** - Complete deployment guide with examples
+- **[docs/best-practices.md](docs/best-practices.md)** - Usage patterns and common pitfalls
+- **[docs/archive/model-card.md](docs/archive/model-card.md)** - HuggingFace model card
+- **[docs/archive/notes.md](docs/archive/notes.md)** - LightOnOCR model details and benchmarks
 
 ## Resources
 

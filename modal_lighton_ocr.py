@@ -44,7 +44,7 @@ image = (
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
         "MODEL_ID": MODEL_ID,
         "FAST_BOOT": "true" if FAST_BOOT else "false",  # Pass through to container
-        "TORCH_CUDA_ARCH_LIST": "89",  # L4 GPU architecture
+        "TORCH_CUDA_ARCH_LIST": "80",  # A100 GPU architecture (Ampere)
     })
     .run_function(
         preload_model,
@@ -57,7 +57,7 @@ app = modal.App("lighton-ocr-vllm")
 
 @app.function(
     image=image,
-    gpu=f"L4:{N_GPU}",
+    gpu="A100-40GB:1",  # A100 40GB (40GB, 1555 GB/s)
     scaledown_window=15 * 60,  # Stay warm for 15 minutes
     timeout=10 * 60,  # 10 minute timeout
     volumes={
@@ -65,7 +65,7 @@ app = modal.App("lighton-ocr-vllm")
         "/root/.cache/vllm": vllm_cache_vol,
     },
 )
-@modal.concurrent(max_inputs=32)  # Handle 32 concurrent requests
+@modal.concurrent(max_inputs=64)  # Handle 64 concurrent requests per container
 @modal.web_server(port=VLLM_PORT, startup_timeout=10 * 60)
 def serve():
     import subprocess
@@ -89,10 +89,10 @@ def serve():
         "--gpu-memory-utilization",
         "0.90",
         "--max-num-seqs",
-        "512",
+        "1024",  # A100-40GB can handle large batches with 40GB memory
         "--limit-mm-per-prompt",
         '{"image": 1}',  # Vision model: one image per request
-        "--async-scheduling",  # Enable async scheduling for better throughput
+        # Removed --async-scheduling due to known bugs with vision models causing crashes
         "--tensor-parallel-size",
         str(N_GPU),
     ]
